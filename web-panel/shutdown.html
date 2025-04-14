@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trax-6A GPS Tracker - Remote Shutdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-satellite-dish text-2xl text-blue-600 mr-2"></i>
+                        <span class="font-bold text-xl">Trax-6A GPS</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="dashboard.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <a href="history.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            History
+                        </a>
+                        <a href="shutdown.html" class="border-b-2 border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">
+                            Remote Shutdown
+                        </a>
+                        <a href="settings.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Settings
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="logout" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Remote Shutdown Control</h1>
+                <p class="text-gray-600">Safely shutdown tracked devices remotely</p>
+            </div>
+
+            <!-- Active Devices Section -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Active Devices</h2>
+                <div id="deviceList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Device cards will be populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Manual IMEI Input Section -->
+            <div class="border-t pt-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Manual Shutdown</h2>
+                <form id="shutdownForm" class="max-w-md">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="imei">
+                            Device IMEI
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-mobile-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="imei" name="imei" required
+                                   pattern="[0-9]{15}"
+                                   placeholder="Enter 15-digit IMEI number"
+                                   class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">Enter the 15-digit IMEI number of the device</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="reason">
+                            Shutdown Reason
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-comment absolute left-3 top-3 text-gray-400"></i>
+                            <textarea id="reason" name="reason" required
+                                      placeholder="Enter reason for shutdown"
+                                      class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="confirm" name="confirm" required
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label class="ml-2 block text-sm text-gray-700" for="confirm">
+                            I confirm that I want to shutdown this device
+                        </label>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-300 flex items-center justify-center">
+                        <i class="fas fa-power-off mr-2"></i>
+                        Send Shutdown Command
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Shutdown History -->
+        <div class="mt-8 bg-white shadow-lg rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Shutdown History</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Initiated By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shutdownHistory" class="bg-white divide-y divide-gray-200">
+                        <!-- Shutdown history will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Confirm Shutdown</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">
+                        Are you sure you want to shutdown this device? This action cannot be undone.
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="confirmYes" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 mb-2">
+                        Yes, Shutdown Device
+                    </button>
+                    <button id="confirmNo" class="px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeDevices = [];
+        let shutdownHistory = [];
+
+        async function fetchDevices() {
+            try {
+                const response = await fetch('/api/devices', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to fetch devices');
+                }
+                
+                activeDevices = await response.json();
+                updateDeviceList();
+            } catch (error) {
+                console.error('Error fetching devices:', error);
+            }
+        }
+
+        async function fetchShutdownHistory() {
+            try {
+                const response = await fetch('/api/shutdown/history', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch shutdown history');
+                }
+                
+                shutdownHistory = await response.json();
+                updateShutdownHistory();
+            } catch (error) {
+                console.error('Error fetching shutdown history:', error);
+            }
+        }
+
+        function updateDeviceList() {
+            const deviceList = document.getElementById('deviceList');
+            deviceList.innerHTML = '';
+
+            activeDevices.forEach(device => {
+                const deviceCard = document.createElement('div');
+                deviceCard.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200';
+                deviceCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center">
+                            <span class="h-2 w-2 rounded-full ${device.online ? 'bg-green-500' : 'bg-red-500'} mr-2"></span>
+                            <span class="font-medium">${device.online ? 'Online' : 'Offline'}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">Last seen: ${new Date(device.lastSeen).toLocaleString()}</span>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="font-medium">IMEI: ${device.imei}</h3>
+                        <p class="text-sm text-gray-500">Location: ${device.latitude.toFixed(6)}, ${device.longitude.toFixed(6)}</p>
+                    </div>
+                    <button onclick="initiateShutdown('${device.imei}')"
+                            class="w-full bg-red-100 text-red-700 py-2 px-4 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-300 flex items-center justify-center">
+                        <i class="fas fa-power-off mr-2"></i>
+                        Shutdown Device
+                    </button>
+                `;
+                deviceList.appendChild(deviceCard);
+            });
+        }
+
+        function updateShutdownHistory() {
+            const historyTable = document.getElementById('shutdownHistory');
+            historyTable.innerHTML = '';
+
+            shutdownHistory.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.imei}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(record.timestamp).toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.reason}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            record.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }">
+                            ${record.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.initiatedBy}</td>
+                `;
+                historyTable.appendChild(row);
+            });
+        }
+
+        function initiateShutdown(imei) {
+            document.getElementById('imei').value = imei;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        async function sendShutdownCommand(imei, reason) {
+            try {
+                const response = await fetch('/api/shutdown', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ imei, reason })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to send shutdown command');
+                }
+
+                alert('Shutdown command sent successfully');
+                fetchShutdownHistory();
+            } catch (error) {
+                console.error('Error sending shutdown command:', error);
+                alert('Failed to send shutdown command');
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDevices();
+            fetchShutdownHistory();
+            setInterval(fetchDevices, 5000);
+            setInterval(fetchShutdownHistory, 10000);
+
+            document.getElementById('shutdownForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const imei = document.getElementById('imei').value;
+                const reason = document.getElementById('reason').value;
+                if (document.getElementById('confirm').checked) {
+                    initiateShutdown(imei, reason);
+                }
+            });
+
+            document.getElementById('confirmYes').addEventListener('click', () => {
+                const imei = document.getElementById('imei').value;
+                const reason = document.getElementById('reason').value;
+                document.getElementById('confirmModal').classList.add('hidden');
+                sendShutdownCommand(imei, reason);
+            });
+
+            document.getElementById('confirmNo').addEventListener('click', () => {
+                document.getElementById('confirmModal').classList.add('hidden');
+            });
+
+            document.getElementById('logout').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = '/index.html';
+            });
+        });
+    </script>
+</body>
+</html>
