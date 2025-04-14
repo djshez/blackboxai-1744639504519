@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trax-6A GPS Tracker - History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #map {
+            height: 400px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-satellite-dish text-2xl text-blue-600 mr-2"></i>
+                        <span class="font-bold text-xl">Trax-6A GPS</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="dashboard.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <a href="history.html" class="border-b-2 border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">
+                            History
+                        </a>
+                        <a href="shutdown.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Remote Shutdown
+                        </a>
+                        <a href="settings.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Settings
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="logout" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <!-- Filters -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Track History</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="deviceSelect">
+                            Select Device
+                        </label>
+                        <select id="deviceSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select IMEI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="startDate">
+                            Start Date
+                        </label>
+                        <input type="datetime-local" id="startDate" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="endDate">
+                            End Date
+                        </label>
+                        <input type="datetime-local" id="endDate" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="fetchHistory" 
+                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-300">
+                            <i class="fas fa-search mr-2"></i>
+                            Fetch History
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map View -->
+            <div class="mb-6">
+                <div id="map" class="rounded-lg shadow-md"></div>
+                <div class="mt-4 flex space-x-4">
+                    <button id="playRoute" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-300 disabled:opacity-50">
+                        <i class="fas fa-play mr-2"></i>
+                        Play Route
+                    </button>
+                    <button id="pauseRoute" class="bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors duration-300 disabled:opacity-50">
+                        <i class="fas fa-pause mr-2"></i>
+                        Pause
+                    </button>
+                    <button id="stopRoute" class="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-300 disabled:opacity-50">
+                        <i class="fas fa-stop mr-2"></i>
+                        Stop
+                    </button>
+                    <div class="flex-1"></div>
+                    <button id="exportData" class="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-300">
+                        <i class="fas fa-download mr-2"></i>
+                        Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latitude</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Longitude</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Speed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable" class="bg-white divide-y divide-gray-200">
+                        <!-- History data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let markers = [];
+        let polyline;
+        let historyData = [];
+        let animationInterval;
+        let currentAnimationIndex = 0;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 0, lng: 0 },
+                zoom: 2,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    }
+                ]
+            });
+        }
+
+        async function fetchDevices() {
+            try {
+                const response = await fetch('/api/devices', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/index.html';
+                        return;
+                    }
+                    throw new Error('Failed to fetch devices');
+                }
+                
+                const devices = await response.json();
+                updateDeviceSelect(devices);
+            } catch (error) {
+                console.error('Error fetching devices:', error);
+            }
+        }
+
+        function updateDeviceSelect(devices) {
+            const select = document.getElementById('deviceSelect');
+            select.innerHTML = '<option value="">Select IMEI</option>';
+            
+            devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.imei;
+                option.textContent = `Device: ${device.imei}`;
+                select.appendChild(option);
+            });
+        }
+
+        async function fetchHistory() {
+            const imei = document.getElementById('deviceSelect').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!imei || !startDate || !endDate) {
+                alert('Please select device and date range');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/history?imei=${imei}&start=${startDate}&end=${endDate}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch history');
+                }
+
+                historyData = await response.json();
+                displayHistory();
+            } catch (error) {
+                console.error('Error fetching history:', error);
+                alert('Failed to fetch history data');
+            }
+        }
+
+        function displayHistory() {
+            clearMap();
+            updateHistoryTable();
+            if (historyData.length > 0) {
+                drawRoute();
+                centerMapOnRoute();
+                enablePlaybackControls();
+            }
+        }
+
+        function clearMap() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            if (polyline) {
+                polyline.setMap(null);
+            }
+        }
+
+        function drawRoute() {
+            const path = historyData.map(point => ({
+                lat: point.latitude,
+                lng: point.longitude
+            }));
+
+            polyline = new google.maps.Polyline({
+                path: path,
+                geodesic: true,
+                strokeColor: '#2563EB',
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                map: map
+            });
+
+            // Add start and end markers
+            addMarker(path[0], 'Start', 'green');
+            addMarker(path[path.length - 1], 'End', 'red');
+        }
+
+        function addMarker(position, label, color) {
+            const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                label: label,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 7,
+                    fillColor: color,
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: 'white'
+                }
+            });
+            markers.push(marker);
+        }
+
+        function centerMapOnRoute() {
+            const bounds = new google.maps.LatLngBounds();
+            historyData.forEach(point => {
+                bounds.extend({ lat: point.latitude, lng: point.longitude });
+            });
+            map.fitBounds(bounds);
+        }
+
+        function updateHistoryTable() {
+            const table = document.getElementById('historyTable');
+            table.innerHTML = '';
+
+            historyData.forEach(point => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${new Date(point.timestamp).toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${point.latitude.toFixed(6)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${point.longitude.toFixed(6)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${point.speed || 0} km/h
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            point.online ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }">
+                            ${point.online ? 'Online' : 'Offline'}
+                        </span>
+                    </td>
+                `;
+                table.appendChild(row);
+            });
+        }
+
+        function playRoute() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+
+            if (currentAnimationIndex >= historyData.length) {
+                currentAnimationIndex = 0;
+            }
+
+            const animationMarker = new google.maps.Marker({
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                    scale: 6,
+                    fillColor: '#2563EB',
+                    fillOpacity: 1,
+                    strokeWeight: 2
+                }
+            });
+
+            markers.push(animationMarker);
+
+            animationInterval = setInterval(() => {
+                if (currentAnimationIndex >= historyData.length) {
+                    clearInterval(animationInterval);
+                    return;
+                }
+
+                const point = historyData[currentAnimationIndex];
+                const position = { lat: point.latitude, lng: point.longitude };
+                
+                animationMarker.setPosition(position);
+                
+                if (currentAnimationIndex < historyData.length - 1) {
+                    const nextPoint = historyData[currentAnimationIndex + 1];
+                    const heading = google.maps.geometry.spherical.computeHeading(
+                        new google.maps.LatLng(point.latitude, point.longitude),
+                        new google.maps.LatLng(nextPoint.latitude, nextPoint.longitude)
+                    );
+                    animationMarker.setIcon({
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 6,
+                        fillColor: '#2563EB',
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        rotation: heading
+                    });
+                }
+
+                currentAnimationIndex++;
+            }, 1000);
+        }
+
+        function pauseRoute() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+        }
+
+        function stopRoute() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            currentAnimationIndex = 0;
+            displayHistory();
+        }
+
+        function enablePlaybackControls() {
+            document.getElementById('playRoute').disabled = false;
+            document.getElementById('pauseRoute').disabled = false;
+            document.getElementById('stopRoute').disabled = false;
+        }
+
+        function exportData() {
+            const csv = [
+                ['Timestamp', 'Latitude', 'Longitude', 'Speed', 'Status'],
+                ...historyData.map(point => [
+                    new Date(point.timestamp).toLocaleString(),
+                    point.latitude,
+                    point.longitude,
+                    point.speed || 0,
+                    point.online ? 'Online' : 'Offline'
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'tracking_history.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            fetchDevices();
+
+            document.getElementById('fetchHistory').addEventListener('click', fetchHistory);
+            document.getElementById('playRoute').addEventListener('click', playRoute);
+            document.getElementById('pauseRoute').addEventListener('click', pauseRoute);
+            document.getElementById('stopRoute').addEventListener('click', stopRoute);
+            document.getElementById('exportData').addEventListener('click', exportData);
+            document.getElementById('logout').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = '/index.html';
+            });
+
+            // Disable playback controls initially
+            document.getElementById('playRoute').disabled = true;
+            document.getElementById('pauseRoute').disabled = true;
+            document.getElementById('stopRoute').disabled = true;
+        });
+    </script>
+</body>
+</html>
